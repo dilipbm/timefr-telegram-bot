@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "timefr-telegram-bot"
+version = "0.1.0"
+description = ""
+authors = ["dilip <dilip.bmf@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "1.8.2"
+python-dotenv = "^0.20.0"
+python-telegram-bot = {version = "20.0a0", allow-prereleases = true}
+dnspython = "^2.2.1"
+odmantic = "^0.4.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
