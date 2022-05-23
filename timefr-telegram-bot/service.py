@@ -45,8 +45,8 @@ def schedules(type_: TransportType, code: str, station: str, direction: Directio
                 else:
                     grouped_by_destination[destination] = [time]
 
+            response_str = f"Arrêt : <strong> {code} - {station.replace('+',' ')}</strong>\n\n"
             for destination, time in grouped_by_destination.items():
-                response_str = f"Arrêt : <strong> {code} - {station.replace('+',' ')}</strong>\n"
                 response_str += f"{destination}\n"
                 response_str += ", ".join(time)
                 response_str += "\n"

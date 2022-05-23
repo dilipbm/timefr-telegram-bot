@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class Direction(Enum):
     A = "A"
     R = "R"
@@ -25,3 +24,6 @@ class TransportType(Enum):
             return cls.TRAMWAY
         else:
             raise NotImplementedError
+
+class Action(Enum):
+    ADD_TO_FAV = "ADD_TO_FAV"
