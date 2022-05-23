@@ -57,7 +57,7 @@ async def schedules(update: Update, context: CallbackContext.DEFAULT_TYPE):
     )
 
     keyboard = [
-        [InlineKeyboardButton("Ajouter dans favoris", callback_data=callback_data)]
+        [InlineKeyboardButton("Ajouter dans favoris", callback_data="callback_data")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
