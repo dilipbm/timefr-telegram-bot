@@ -1,1 +1,1 @@
-web: python3 timefr-telegram-bot/main.py
+worker: python3 timefr-telegram-bot/main.py
