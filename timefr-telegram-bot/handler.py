@@ -1,3 +1,4 @@
+from ast import arg
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, CallbackContext, CommandHandler
@@ -9,7 +10,8 @@ from service import (
     build_user_fav_keyboard,
 )
 from config import engine
-from model import Favorite, CallbackData
+import json
+from model import Favorite, LastAsked
 from enums import TransportType, Direction, Action
 
 
@@ -26,6 +28,7 @@ async def start(update: Update, context: CallbackContext.DEFAULT_TYPE):
 
 
 async def schedules(update: Update, context: CallbackContext.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
     if len(context.args) < 4:
         await update.message.reply_text(
             "Mauvaise utilisation de la requête. Consulter l'aide /help"
@@ -51,13 +54,27 @@ async def schedules(update: Update, context: CallbackContext.DEFAULT_TYPE):
         direction=Direction.A_AND_R.value,
     )
 
-    callback_data = CallbackData(
-        action=Action.ADD_TO_FAV,
-        data={"code": code, "station": station, "type": transport_type},
+    # Remove existing items
+    last_asked_by_user = await engine.find(LastAsked, LastAsked.user_id == user_id)
+    if last_asked_by_user:
+        for item in last_asked_by_user:
+            await engine.delete(item)
+
+    # create last asked item
+    last_asked = LastAsked(
+        code=code,
+        user_id=user_id,
+        transport_type=transport_type.value,
+        station=station,
     )
+    await engine.save(last_asked)
 
     keyboard = [
-        [InlineKeyboardButton("Ajouter dans favoris", callback_data="callback_data")]
+        [
+            InlineKeyboardButton(
+                "Ajouter dans favoris", callback_data=f"ADD_FAV {last_asked.id}"
+            )
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -109,20 +126,26 @@ async def button(update: Update, context: CallbackContext.DEFAULT_TYPE) -> None:
     query = update.callback_query
 
     await query.answer()
+    action, obj_id = query.data.split(" ")
+    if action == "ADD_FAV":
+        last_asked = await engine.find_one(LastAsked, LastAsked.id == ObjectId(obj_id))
 
-    # await query.edit_message_text(text=f"Selected option: {query.data}")
-    favorite: Favorite = await engine.find_one(
-        Favorite, Favorite.id == ObjectId(query.data)
-    )
-    t_type = TransportType.from_str(favorite.transport_type)
-
-    res = schedules_serv(
-        type_=t_type,
-        code=favorite.code,
-        station=favorite.station,
-        direction=Direction.A_AND_R.value,
-    )
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=res, parse_mode=ParseMode.HTML
-    )
+        if last_asked:
+            favorite = Favorite(**last_asked.dict())
+            await engine.save(favorite)
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Succefully added to your favorite",
+                parse_mode=ParseMode.HTML,
+            )
+    elif action == "SCHED":
+        favorite = await engine.find_one(Favorite, Favorite.id == ObjectId(obj_id))
+        res = schedules_serv(
+            type_=TransportType.from_str(favorite.transport_type),
+            code=favorite.code,
+            station=favorite.station,
+            direction=Direction.A_AND_R.value,
+        )
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id, text=res, parse_mode=ParseMode.HTML
+        )

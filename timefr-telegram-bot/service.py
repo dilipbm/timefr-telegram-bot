@@ -6,16 +6,23 @@ from config import engine
 from model import Favorite
 from enums import Direction, TransportType
 
+
 async def find_user_favorites(user_id: str) -> List[Favorite]:
     result = await engine.find(Favorite)
     return result
+
 
 def build_user_fav_keyboard(favorites: List[Favorite]):
     keyboard = []
     if favorites:
         for fav in favorites:
             inlinekeyboard = []
-            inlinekeyboard.append(InlineKeyboardButton(f"{fav.code} - {fav.station.replace('+',' ')}", callback_data=str(fav.id)))
+            inlinekeyboard.append(
+                InlineKeyboardButton(
+                    f"{fav.code} - {fav.station.replace('+',' ')}",
+                    callback_data=f"SCHED {fav.id}",
+                )
+            )
             keyboard.append(inlinekeyboard)
 
     return keyboard
@@ -45,7 +52,9 @@ def schedules(type_: TransportType, code: str, station: str, direction: Directio
                 else:
                     grouped_by_destination[destination] = [time]
 
-            response_str = f"Arrêt : <strong> {code} - {station.replace('+',' ')}</strong>\n\n"
+            response_str = (
+                f"Arrêt : <strong> {code} - {station.replace('+',' ')}</strong>\n\n"
+            )
             for destination, time in grouped_by_destination.items():
                 response_str += f"{destination}\n"
                 response_str += ", ".join(time)
@@ -53,4 +62,3 @@ def schedules(type_: TransportType, code: str, station: str, direction: Directio
                 response_str += "-----\n"
 
     return response_str
-

@@ -11,9 +11,13 @@ class Favorite(Model):
     station: str
 
 
+class LastAsked(Model):
+    user_id: int
+    transport_type: str
+    code: str
+    station: str
+
+
 class CallbackData(BaseModel):
     action: Action
     data: Dict
-
-
-
