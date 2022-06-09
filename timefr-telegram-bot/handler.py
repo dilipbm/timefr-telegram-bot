@@ -1,4 +1,3 @@
-from ast import arg
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, CallbackContext, CommandHandler
@@ -21,15 +20,14 @@ async def start(update: Update, context: CallbackContext.DEFAULT_TYPE):
     <b>Utilisation</b>\n
     /help: Pour obtenir de l'aide\n
     /horaire: Obternir les horaires. Exemple d'utilisation /horaire bus 270 La cerisaie\n
-    /add_fav: Ajouter a vos favoris. Exemple d'utilisation /add_fav bus 270 La cerisaie\n
-    /show_fav: Afficher vos favoris.\n
+    /showfav: Afficher vos favoris.\n
     """
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def schedules(update: Update, context: CallbackContext.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    if len(context.args) < 4:
+    if len(context.args) < 3:
         await update.message.reply_text(
             "Mauvaise utilisation de la requête. Consulter l'aide /help"
         )
@@ -83,42 +81,12 @@ async def schedules(update: Update, context: CallbackContext.DEFAULT_TYPE):
     )
 
 
-async def add_favorite(update: Update, context: CallbackContext.DEFAULT_TYPE):
-    print("start add favorite")
-    # favorite = Favorite(**favorite_data)
-    print(update.message.text)
-
-    try:
-        _, t_type, code = update.message.text.split(" ")
-    except Exception as e:
-        await update.message.reply_text(
-            "Something went wrong, use like this /add_fav bus 270"
-        )
-        print(e)
-        t_type = None
-        code = None
-
-    if t_type and code:
-        t_type = TransportType.from_str(t_type)
-        favorite = Favorite(
-            code=code,
-            user_id=update.message.from_user.id,
-            transport_type=t_type.value,
-            station="La+Cerisaie",
-        )
-
-        await engine.save(favorite)
-
-        replay = "Done !"
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=replay)
-
-
 async def show_favorite(update: Update, context: CallbackContext.DEFAULT_TYPE):
     favorites = await find_user_favorites(update.message.from_user.id)
     keyboard = build_user_fav_keyboard(favorites=favorites)
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Please choose:", reply_markup=reply_markup)
+    await update.message.reply_text("Sélectionner :", reply_markup=reply_markup)
 
 
 async def button(update: Update, context: CallbackContext.DEFAULT_TYPE) -> None:
@@ -135,7 +103,7 @@ async def button(update: Update, context: CallbackContext.DEFAULT_TYPE) -> None:
             await engine.save(favorite)
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Succefully added to your favorite",
+                text="Favoris ajouté",
                 parse_mode=ParseMode.HTML,
             )
     elif action == "SCHED":
